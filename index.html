@@ -244,6 +244,10 @@ class Component extends DCLogic {
     this._probe=setInterval(()=>{this._alive=(performance.now()-(this._last||0))<300;},250);
     this.cur=this.target=this.readP();this.update(this.cur);
     const img=new Image();img.onload=()=>{this.onResize();this.intro();};img.onerror=()=>this.intro();img.src='assets/hero-valley.png';
+    const autoEv=['scroll','wheel','touchend','pointerdown','keydown','click'],autoOff=()=>autoEv.forEach(e=>window.removeEventListener(e,autoMusic));
+    const autoMusic=()=>{if(this._musicStarted){autoOff();return;}if(window.scrollY<24)return;
+      Promise.resolve(this.getAudio().play()).then(()=>{autoOff();if(this._musicStarted)return;this._musicStarted=true;this.musicOn=true;this.fadeAudio(.7,1500);this.syncMusic();}).catch(()=>{});};
+    autoEv.forEach(e=>window.addEventListener(e,autoMusic,{passive:true}));this._autoOff=autoOff;
     window.__mjReveal=()=>{const c=this.scratchRef.current;if(c){c.style.opacity='0';c.style.pointerEvents='none';}this._sh&&this._sh.play();};window.__mjPreview=p=>{this.readP=()=>p;this.cur=p;this.update(p);};
     this.tick=this.tick.bind(this);this.raf=requestAnimationFrame(this.tick);
     this.initScratch();
@@ -365,7 +369,7 @@ class Component extends DCLogic {
     return {play,reset};
   }
   componentDidUpdate(){this.applyLength();}
-  componentWillUnmount(){if(this.audio){this.audio.pause();}cancelAnimationFrame(this._fadeR);clearInterval(this.cdT);cancelAnimationFrame(this.raf);this.ro&&this.ro.disconnect();clearInterval(this._vtimer);window.removeEventListener('resize',this._mf);this._mfRO&&this._mfRO.disconnect();clearInterval(this._mT);this.ac&&this.ac.close();this._storyIO&&this._storyIO.disconnect();clearInterval(this._archT);cancelAnimationFrame(this._spRaf);['scroll','pointerdown','touchstart','keydown'].forEach(e=>window.removeEventListener(e,this._vkick));this.sro&&this.sro.disconnect();this.secRO&&this.secRO.disconnect();this.stopShower&&this.stopShower();clearInterval(this._probe);window.removeEventListener('scroll',this.onScroll);window.removeEventListener('resize',this.onResize);['wheel','touchstart','keydown'].forEach(ev=>window.removeEventListener(ev,this.cancelAuto));}
+  componentWillUnmount(){if(this.audio){this.audio.pause();}this._autoOff&&this._autoOff();cancelAnimationFrame(this._fadeR);clearInterval(this.cdT);cancelAnimationFrame(this.raf);this.ro&&this.ro.disconnect();clearInterval(this._vtimer);window.removeEventListener('resize',this._mf);this._mfRO&&this._mfRO.disconnect();clearInterval(this._mT);this.ac&&this.ac.close();this._storyIO&&this._storyIO.disconnect();clearInterval(this._archT);cancelAnimationFrame(this._spRaf);['scroll','pointerdown','touchstart','keydown'].forEach(e=>window.removeEventListener(e,this._vkick));this.sro&&this.sro.disconnect();this.secRO&&this.secRO.disconnect();this.stopShower&&this.stopShower();clearInterval(this._probe);window.removeEventListener('scroll',this.onScroll);window.removeEventListener('resize',this.onResize);['wheel','touchstart','keydown'].forEach(ev=>window.removeEventListener(ev,this.cancelAuto));}
   applyLength(){const v=parseInt(this.props.journeyLength||'600',10);const j=this.journeyRef.current;if(j)j.style.height=v+'vh';}
   intro(){const it=this.$.intro;if(!it)return;it.style.transition='opacity 1.4s ease, transform 5s cubic-bezier(.16,.7,.2,1)';it.style.opacity='1';it.style.transform='scale(1)';}
 
